@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">StigaGoalSong</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="home_goal">Home Goal</string>
+    <string name="away_goal">Away Goal</string>
+    <string name="stop_song">Stop</string>
+    <string name="mute_song">Mute</string>
+    <string name="faceoff_song">Face-off!</string>
+
+</resources>
