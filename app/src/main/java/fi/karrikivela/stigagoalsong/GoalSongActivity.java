@@ -8,15 +8,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import java.io.IOException;
+
 import fi.karrikivela.stigagoalsong.R;
 
 
 public class GoalSongActivity extends Activity {
-
-    private Button homeGoalSongButton;
-    private Button awayGoalSongButton;
-    private Button stopGoalSongButton;
-    private Button settingsButton;
 
     private MediaPlayer mediaPlayer;
 
@@ -34,12 +31,6 @@ public class GoalSongActivity extends Activity {
     }
 
     private void myInit(){
-        homeGoalSongButton = (Button) findViewById(R.id.homegoalbutton);
-        awayGoalSongButton = (Button) findViewById(R.id.awaygoalbutton);
-        stopGoalSongButton = (Button) findViewById(R.id.stopbutton);
-        settingsButton     = (Button) findViewById(R.id.settingsbutton);
-
-
         //TODO create dynamic mediaplayer without a static song!
         mediaPlayer = MediaPlayer.create(this, R.raw.shaibu_shaibu_traktor);
 
@@ -64,7 +55,12 @@ public class GoalSongActivity extends Activity {
     public void homeGoalButtonOnClick(View v){
         if (isAwayGoalSongPlaying == Boolean.FALSE) {
             if (isHomeGoalSongPlaying == Boolean.FALSE) {
-                mediaPlayer.start();
+                try {
+                    mediaPlayer.start();
+                } catch (IllegalStateException e) {
+                    System.err.println("FAIL!"); //TODO add logging
+                }
+
                 isHomeGoalSongPlaying = Boolean.TRUE;
             } else {
                 mediaPlayer.pause();
@@ -78,6 +74,23 @@ public class GoalSongActivity extends Activity {
     * */
     public void awayGoalButtonOnClick(View v){
 
+        //Start playing away goal song (IF home goal song is not already playing)
+
+        //Put the running time clock to pause
+
+        //If already playing, put to pause
+
+        //If paused, put back to play
+    }
+
+
+    /* Function: faceoffSongButtonOnClick
+    *  Summary: This method is called whenever the faceoff button is being clicked
+    * */
+    public void faceoffSongButtonOnClick(View v){
+        //On first click start playing face-off song
+
+        //On second click stop song and start timer
     }
 
 
@@ -85,9 +98,25 @@ public class GoalSongActivity extends Activity {
     *  Summary: This method is called whenever the stop goal song button is being clicked
     * */
     public void stopGoalSongOnClick(View v){
-        mediaPlayer.stop();
+        try {
+            mediaPlayer.stop();
+
+        } catch (IllegalStateException e) {
+            System.err.println("FAIL2!"); //TODO add logging
+        }
+
         isHomeGoalSongPlaying = Boolean.FALSE;
         isAwayGoalSongPlaying = Boolean.FALSE;
+
+        //Prepare the mediaplayer already for the play
+        try {
+            mediaPlayer.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //It seems that stop doesn't do it's job afterall - seek to the beginning!
+        mediaPlayer.seekTo(0);
     }
 
 

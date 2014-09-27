@@ -88,8 +88,9 @@
             android:layout_width="193dp"
             android:layout_height="wrap_content"
             android:text="@string/faceoff_song"
-            android:id="@+id/button7"
+            android:id="@+id/faceoffbutton"
             android:layout_marginTop="290dp"
-            android:layout_marginLeft="90dp" />
+            android:layout_marginLeft="90dp"
+            android:onClick="faceoffSongButtonOnClick" />
     </LinearLayout>
 </RelativeLayout>
