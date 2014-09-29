@@ -1,14 +1,26 @@
 package fi.karrikivela.stigagoalsong;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import fi.karrikivela.stigagoalsong.R;
 
@@ -21,6 +33,37 @@ public class GoalSongActivity extends Activity {
     private Boolean isAwayGoalSongPlaying;
     private Boolean isGoalSongMuted;
 
+    private String homeTeamGoalSongFileName;
+    private String awayTeamGoalSongFileName;
+
+    private String homeTeamName = "Home team";
+    private String awayTeamName = "Away team";
+
+    private TextView homeTeamTextView;
+    private TextView awayTeamTextView;
+
+    private String absolutePathToGoalSongsDirectory;
+
+    private final String goalSongsFolderName = "goalsongs";
+    private final String faceoffSongsFolderName = "faceoffsongs";
+
+
+
+    private void getSettings(){
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        //Get team name
+        homeTeamName = sharedPref.getString(SettingsActivity.HOME_TEAM_NAME_KEY_NAME, "");
+        awayTeamName = sharedPref.getString(SettingsActivity.AWAY_TEAM_NAME_KEY_NAME, "");
+
+        homeTeamTextView.setText(homeTeamName);
+        awayTeamTextView.setText(awayTeamName);
+
+        //Get goal song
+        homeTeamGoalSongFileName = sharedPref.getString(SettingsActivity.HOME_GOAL_SONG_KEY_NAME, "");
+        awayTeamGoalSongFileName = sharedPref.getString(SettingsActivity.AWAY_GOAL_SONG_KEY_NAME, "");
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,14 +74,41 @@ public class GoalSongActivity extends Activity {
     }
 
     private void myInit(){
-        //TODO create dynamic mediaplayer without a static song!
-        mediaPlayer = MediaPlayer.create(this, R.raw.shaibu_shaibu_traktor);
 
+        homeTeamTextView = (TextView)findViewById(R.id.home_name);
+        awayTeamTextView = (TextView)findViewById(R.id.away_name);
+
+        absolutePathToGoalSongsDirectory = String.valueOf(getExternalFilesDir(null)) + "/" + goalSongsFolderName;
+
+        mediaPlayer = new MediaPlayer();
 
         isHomeGoalSongPlaying = Boolean.FALSE;
         isAwayGoalSongPlaying = Boolean.FALSE;
 
         isGoalSongMuted       = Boolean.FALSE;
+    }
+
+
+    private void prepareAndStartPlayingSong(String filename){
+
+        if(!mediaPlayer.isPlaying()) {
+            try {
+                //Get back to IDLE state to be able to setDataSource
+                mediaPlayer.reset();
+
+                mediaPlayer.setDataSource(absolutePathToGoalSongsDirectory + "/" + filename);
+
+                mediaPlayer.prepare();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            try {
+                mediaPlayer.start();
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -55,12 +125,9 @@ public class GoalSongActivity extends Activity {
     public void homeGoalButtonOnClick(View v){
         if (isAwayGoalSongPlaying == Boolean.FALSE) {
             if (isHomeGoalSongPlaying == Boolean.FALSE) {
-                try {
-                    mediaPlayer.start();
-                } catch (IllegalStateException e) {
-                    System.err.println("FAIL!"); //TODO add logging
-                }
-
+                //Get settings - maybe song names have been changed
+                getSettings();
+                prepareAndStartPlayingSong(homeTeamGoalSongFileName);
                 isHomeGoalSongPlaying = Boolean.TRUE;
             } else {
                 mediaPlayer.pause();
@@ -73,7 +140,6 @@ public class GoalSongActivity extends Activity {
     *  Summary: This method is called whenever the away goal button is being clicked
     * */
     public void awayGoalButtonOnClick(View v){
-
         //Start playing away goal song (IF home goal song is not already playing)
 
         //Put the running time clock to pause
@@ -81,6 +147,18 @@ public class GoalSongActivity extends Activity {
         //If already playing, put to pause
 
         //If paused, put back to play
+
+        if (isHomeGoalSongPlaying == Boolean.FALSE) {
+            if (isAwayGoalSongPlaying == Boolean.FALSE) {
+                //Get settings - maybe song names have been changed
+                getSettings();
+                prepareAndStartPlayingSong(awayTeamGoalSongFileName);
+                isAwayGoalSongPlaying = Boolean.TRUE;
+            } else {
+                mediaPlayer.pause();
+                isAwayGoalSongPlaying = Boolean.FALSE;
+            }
+        }
     }
 
 
@@ -136,6 +214,28 @@ public class GoalSongActivity extends Activity {
         }
     }
 
+
+    public void settingsOnClick(View v) {
+        Intent intent = new Intent(this, SettingsActivity.class);
+
+        File f = new File(absolutePathToGoalSongsDirectory);
+        File file_listing[] = f.listFiles();
+
+        List<String> file_list_string = new ArrayList<String>();
+
+        for(int x = 0 ; x < file_listing.length; x++) {
+            if(file_listing[x].isFile()) {
+                file_list_string.add(file_listing[x].getName());
+            }
+        }
+
+        intent.putStringArrayListExtra("file_list_string", (ArrayList<String>) file_list_string);
+
+
+
+
+        startActivity(intent);
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

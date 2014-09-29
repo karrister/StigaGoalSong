@@ -1,0 +1,27 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A 'parent' preference, which enables/disables child preferences (below)
+         when checked/unchecked. -->
+    <CheckBoxPreference
+        android:key="is_timer_enabled_setting"
+        android:title="@string/pref_is_timer_enabled"
+        android:defaultValue="false" />
+
+    <!-- Allows the user to choose a ringtone in the 'notification' category. -->
+    <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
+    <!-- NOTE: RingtonePreference's summary should be set to its value by the activity code. -->
+
+    <ListPreference
+        android:dependency="is_timer_enabled_setting"
+        android:key="timer_game_length_list_setting"
+        android:title="@string/pref_title_game_length"
+        android:entries="@array/pref_title_game_length_titles"
+        android:entryValues="@array/pref_title_game_length_values"
+        android:defaultValue="5"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null" />
+
+    <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
+
+
+</PreferenceScreen>

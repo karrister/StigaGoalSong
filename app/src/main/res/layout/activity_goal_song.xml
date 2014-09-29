@@ -16,7 +16,36 @@
         android:id="@+id/settingsbutton"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:onClick="settingsOnClick" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Home team"
+            android:id="@+id/home_name" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Away team"
+            android:id="@+id/away_name"
+            android:layout_marginLeft="200dp" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -26,14 +55,15 @@
 
         <Button
             android:layout_width="@dimen/button_width"
-            android:layout_height="250dp"
+            android:layout_height="220dp"
             android:text="@string/home_goal"
             android:id="@+id/homegoalbutton"
             android:layout_above="@+id/button3"
             android:layout_alignParentLeft="false"
             android:layout_alignParentStart="false"
             android:layout_weight="0.37"
-            android:onClick="homeGoalButtonOnClick" />
+            android:onClick="homeGoalButtonOnClick"
+            android:layout_marginTop="50dp" />
 
     </LinearLayout>
 
@@ -45,14 +75,15 @@
 
         <Button
             android:layout_width="155dp"
-            android:layout_height="250dp"
+            android:layout_height="220dp"
             android:text="@string/away_goal"
             android:id="@+id/awaygoalbutton"
             android:layout_toEndOf="@+id/faceoffbutton"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:onClick="awayGoalButtonOnClick" />
+            android:onClick="awayGoalButtonOnClick"
+            android:layout_marginTop="50dp" />
     </LinearLayout>
 
     <LinearLayout

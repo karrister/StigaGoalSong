@@ -1,0 +1,29 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Allows the user to choose a ringtone in the 'notification' category. -->
+    <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
+    <!-- NOTE: RingtonePreference's summary should be set to its value by the activity code. -->
+
+    <ListPreference
+        android:key="home_team_goal_song_list_setting"
+        android:title="@string/pref_title_home_team_goal_song"
+        android:entries="@array/pref_title_game_length_titles"
+        android:entryValues="@array/pref_title_game_length_values"
+        android:defaultValue="Jokerit"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null" />
+
+
+    <ListPreference
+        android:key="away_team_goal_song_list_setting"
+        android:title="@string/pref_title_away_team_goal_song"
+        android:entries="@array/pref_title_game_length_titles"
+        android:entryValues="@array/pref_title_game_length_values"
+        android:defaultValue="Shaibu shaibu traktor"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null" />
+
+    <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
+
+
+</PreferenceScreen>

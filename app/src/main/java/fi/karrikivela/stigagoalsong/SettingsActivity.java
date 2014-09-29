@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,6 +42,13 @@ public class SettingsActivity extends PreferenceActivity {
      * shown on tablets.
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
+
+
+    public static final String HOME_TEAM_NAME_KEY_NAME = "home_team_name_setting";
+    public static final String AWAY_TEAM_NAME_KEY_NAME = "away_team_name_setting";
+
+    public static final String HOME_GOAL_SONG_KEY_NAME = "home_team_goal_song_list_setting";
+    public static final String AWAY_GOAL_SONG_KEY_NAME = "away_team_goal_song_list_setting";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,25 +109,61 @@ public class SettingsActivity extends PreferenceActivity {
         // Add 'general' preferences.
         addPreferencesFromResource(R.xml.pref_general);
 
-        // Add 'notifications' preferences, and a corresponding header.
-        PreferenceCategory fakeHeader = new PreferenceCategory(this);
-        fakeHeader.setTitle(R.string.pref_header_notifications);
-        getPreferenceScreen().addPreference(fakeHeader);
-        addPreferencesFromResource(R.xml.pref_notification);
 
-        // Add 'data and sync' preferences, and a corresponding header.
-        fakeHeader = new PreferenceCategory(this);
-        fakeHeader.setTitle(R.string.pref_header_data_sync);
-        getPreferenceScreen().addPreference(fakeHeader);
-        addPreferencesFromResource(R.xml.pref_data_sync);
+        ArrayList<String> filenames = getIntent().getStringArrayListExtra("file_list_string");
+
+
+        PreferenceCategory goalSongCategory = new PreferenceCategory(this);
+        goalSongCategory.setTitle("Goal songs");
+
+        getPreferenceScreen().addPreference(goalSongCategory);
+
+        CharSequence[] goalSongEntries = new CharSequence[filenames.size()];
+
+        for(int i = 0; i < filenames.size(); i++) {
+            goalSongEntries[i] = ((CharSequence) filenames.get(i));
+        }
+
+        final ListPreference homeTeamGoalSongPref = new ListPreference(this);
+
+        homeTeamGoalSongPref.setKey(HOME_GOAL_SONG_KEY_NAME);
+        homeTeamGoalSongPref.setDefaultValue(goalSongEntries[0]);
+        homeTeamGoalSongPref.setEntries(goalSongEntries);
+        homeTeamGoalSongPref.setEntryValues(goalSongEntries);
+        homeTeamGoalSongPref.setDialogTitle("Home team goal song");
+        homeTeamGoalSongPref.setTitle("Home team goal song");
+        //homeTeamGoalSongPref.setSummary("Summary");
+
+        goalSongCategory.addPreference(homeTeamGoalSongPref);
+
+        final ListPreference awayTeamGoalSongPref = new ListPreference(this);
+
+        awayTeamGoalSongPref.setKey(AWAY_GOAL_SONG_KEY_NAME);
+        awayTeamGoalSongPref.setDefaultValue(goalSongEntries[0]);
+        awayTeamGoalSongPref.setEntries(goalSongEntries);
+        awayTeamGoalSongPref.setEntryValues(goalSongEntries);
+        awayTeamGoalSongPref.setDialogTitle("Away team goal song");
+        awayTeamGoalSongPref.setTitle("Away team goal song");
+        //awayTeamGoalSongPref.setSummary("Summary");
+
+        goalSongCategory.addPreference(awayTeamGoalSongPref);
+
+        // Add timer settings
+        PreferenceCategory timerCategory = new PreferenceCategory(this);
+        timerCategory.setTitle(R.string.pref_header_timer);
+        getPreferenceScreen().addPreference(timerCategory);
+        addPreferencesFromResource(R.xml.pref_timer);
+
 
         // Bind the summaries of EditText/List/Dialog/Ringtone preferences to
         // their values. When their values change, their summaries are updated
         // to reflect the new value, per the Android Design guidelines.
-        bindPreferenceSummaryToValue(findPreference("example_text"));
-        bindPreferenceSummaryToValue(findPreference("example_list"));
-        bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
-        bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+        //bindPreferenceSummaryToValue(findPreference("example_text"));
+        bindPreferenceSummaryToValue(findPreference(HOME_TEAM_NAME_KEY_NAME));
+        bindPreferenceSummaryToValue(findPreference(AWAY_TEAM_NAME_KEY_NAME));
+        bindPreferenceSummaryToValue(findPreference(HOME_GOAL_SONG_KEY_NAME));
+        bindPreferenceSummaryToValue(findPreference(AWAY_GOAL_SONG_KEY_NAME));
+        bindPreferenceSummaryToValue(findPreference("timer_game_length_list_setting"));
     }
 
     /** {@inheritDoc} */
@@ -247,8 +291,9 @@ public class SettingsActivity extends PreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("example_list"));
+            //karri:
+            //bindPreferenceSummaryToValue(findPreference("example_text"));
+            //bindPreferenceSummaryToValue(findPreference("example_list"));
         }
     }
 
@@ -261,13 +306,14 @@ public class SettingsActivity extends PreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_notification);
+           // addPreferencesFromResource(R.xml.pref_notification);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+            //karri:
+            //bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
         }
     }
 
@@ -280,13 +326,13 @@ public class SettingsActivity extends PreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_data_sync);
+            //addPreferencesFromResource(R.xml.pref_data_sync);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+            //bindPreferenceSummaryToValue(findPreference("sync_frequency"));
         }
     }
 }
