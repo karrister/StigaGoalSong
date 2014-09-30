@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
@@ -21,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import fi.karrikivela.stigagoalsong.R;
 
@@ -43,9 +45,14 @@ public class GoalSongActivity extends Activity {
     private TextView awayTeamTextView;
 
     private String absolutePathToGoalSongsDirectory;
+    private String absolutePathToFaceoffSongsDirectory;
 
     private final String goalSongsFolderName = "goalsongs";
     private final String faceoffSongsFolderName = "faceoffsongs";
+
+    private List<String> faceOffSongsFileList;
+
+    private Random randomFaceOffSongIndexGenerator;
 
 
 
@@ -80,6 +87,15 @@ public class GoalSongActivity extends Activity {
 
         absolutePathToGoalSongsDirectory = String.valueOf(getExternalFilesDir(null)) + "/" + goalSongsFolderName;
 
+        absolutePathToFaceoffSongsDirectory = String.valueOf(getExternalFilesDir(null)) + "/" + faceoffSongsFolderName;
+
+        //Init face-off songs list
+        faceOffSongsFileList = new ArrayList<String>();
+
+        //Init the random generator for generating randomly the face-off song index in the array
+        randomFaceOffSongIndexGenerator = new Random();
+
+        //Create MediaPlayer for playing the music
         mediaPlayer = new MediaPlayer();
 
         isHomeGoalSongPlaying = Boolean.FALSE;
@@ -89,14 +105,14 @@ public class GoalSongActivity extends Activity {
     }
 
 
-    private void prepareAndStartPlayingSong(String filename){
+    private void prepareAndStartPlayingSong(String filepath){
 
         if(!mediaPlayer.isPlaying()) {
             try {
                 //Get back to IDLE state to be able to setDataSource
                 mediaPlayer.reset();
 
-                mediaPlayer.setDataSource(absolutePathToGoalSongsDirectory + "/" + filename);
+                mediaPlayer.setDataSource(filepath);
 
                 mediaPlayer.prepare();
             } catch (Exception e) {
@@ -113,6 +129,34 @@ public class GoalSongActivity extends Activity {
 
 
     @Override
+    public void onPause() {
+        super.onPause();  // Always call the superclass method first
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+
+        //Get settings
+        getSettings();
+
+
+        //Get list of face-off songs
+        File f = new File(absolutePathToFaceoffSongsDirectory);
+        File file_listing[] = f.listFiles();
+
+        //Always clear whatever entries there were before
+        faceOffSongsFileList.clear();
+
+        for(int x = 0 ; x < file_listing.length; x++) {
+            if(file_listing[x].isFile()) {
+                faceOffSongsFileList.add(file_listing[x].getName());
+            }
+        }
+
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.goal_song, menu);
@@ -125,9 +169,7 @@ public class GoalSongActivity extends Activity {
     public void homeGoalButtonOnClick(View v){
         if (isAwayGoalSongPlaying == Boolean.FALSE) {
             if (isHomeGoalSongPlaying == Boolean.FALSE) {
-                //Get settings - maybe song names have been changed
-                getSettings();
-                prepareAndStartPlayingSong(homeTeamGoalSongFileName);
+                prepareAndStartPlayingSong(absolutePathToGoalSongsDirectory + "/" + homeTeamGoalSongFileName);
                 isHomeGoalSongPlaying = Boolean.TRUE;
             } else {
                 mediaPlayer.pause();
@@ -150,9 +192,7 @@ public class GoalSongActivity extends Activity {
 
         if (isHomeGoalSongPlaying == Boolean.FALSE) {
             if (isAwayGoalSongPlaying == Boolean.FALSE) {
-                //Get settings - maybe song names have been changed
-                getSettings();
-                prepareAndStartPlayingSong(awayTeamGoalSongFileName);
+                prepareAndStartPlayingSong(absolutePathToGoalSongsDirectory + "/" + awayTeamGoalSongFileName);
                 isAwayGoalSongPlaying = Boolean.TRUE;
             } else {
                 mediaPlayer.pause();
@@ -169,6 +209,12 @@ public class GoalSongActivity extends Activity {
         //On first click start playing face-off song
 
         //On second click stop song and start timer
+
+        Integer randomIndexInFaceOffSongArrayToPlayNext = randomFaceOffSongIndexGenerator.nextInt(faceOffSongsFileList.size());
+
+        String randomlyChosenFaceOffSongFileName = faceOffSongsFileList.get(randomIndexInFaceOffSongArrayToPlayNext);
+
+        prepareAndStartPlayingSong(absolutePathToFaceoffSongsDirectory + "/" + randomlyChosenFaceOffSongFileName);
     }
 
 
@@ -229,12 +275,25 @@ public class GoalSongActivity extends Activity {
             }
         }
 
+        //Attach the list files found in the goal songs directory, for user to choose in the settings Activity/screen
         intent.putStringArrayListExtra("file_list_string", (ArrayList<String>) file_list_string);
 
-
-
-
         startActivity(intent);
+    }
+
+
+    public void timerStartOnClick(View v) {
+
+        new CountDownTimer(30000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                timeLeftTextField.setText((float) millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                mTextField.setText("done!");
+            }
+        }.start();
     }
 
     @Override
