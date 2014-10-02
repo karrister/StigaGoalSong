@@ -189,8 +189,13 @@ public class GoalSongActivity extends Activity {
     public void onResume() {
         super.onResume();  // Always call the superclass method first
 
-        //Get settings
-        getSettings();
+        try {
+            //Get settings
+            getSettings();
+        }
+        catch (Exception e){
+
+        }
 
         if(!isTimerEnabledByUser){
             statusTextView.setText("GAME ON");

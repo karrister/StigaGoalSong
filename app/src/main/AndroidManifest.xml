@@ -24,8 +24,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="fi.karrikivela.stigagoalsong.GoalSongActivity" />
         </activity>
-        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     </application>
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 </manifest>
