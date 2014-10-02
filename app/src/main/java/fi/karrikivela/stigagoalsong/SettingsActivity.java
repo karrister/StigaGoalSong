@@ -50,6 +50,13 @@ public class SettingsActivity extends PreferenceActivity {
     public static final String HOME_GOAL_SONG_KEY_NAME = "home_team_goal_song_list_setting";
     public static final String AWAY_GOAL_SONG_KEY_NAME = "away_team_goal_song_list_setting";
 
+    public static final String TIMER_ENABLED_KEY_NAME = "is_timer_enabled_setting";
+
+    public static final String GAME_LENGTH_KEY_NAME = "timer_game_length_list_setting";
+
+
+    public static final Integer USER_SETTING_BASIC_UNIT_IN_SECONDS = 60;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -163,7 +170,9 @@ public class SettingsActivity extends PreferenceActivity {
         bindPreferenceSummaryToValue(findPreference(AWAY_TEAM_NAME_KEY_NAME));
         bindPreferenceSummaryToValue(findPreference(HOME_GOAL_SONG_KEY_NAME));
         bindPreferenceSummaryToValue(findPreference(AWAY_GOAL_SONG_KEY_NAME));
-        bindPreferenceSummaryToValue(findPreference("timer_game_length_list_setting"));
+        //bindPreferenceSummaryToValue(findPreference(TIMER_ENABLED_KEY_NAME));
+        bindPreferenceSummaryToValue(findPreference(GAME_LENGTH_KEY_NAME));
+
     }
 
     /** {@inheritDoc} */

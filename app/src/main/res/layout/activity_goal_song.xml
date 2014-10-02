@@ -30,6 +30,13 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Home team"
             android:id="@+id/home_name" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="0"
+            android:id="@+id/home_team_score" />
     </LinearLayout>
 
     <LinearLayout
@@ -45,6 +52,14 @@
             android:id="@+id/away_name"
             android:layout_marginLeft="200dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="0"
+            android:id="@+id/away_team_score"
+            android:layout_marginLeft="200dp" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -55,7 +70,7 @@
 
         <Button
             android:layout_width="@dimen/button_width"
-            android:layout_height="220dp"
+            android:layout_height="180dp"
             android:text="@string/home_goal"
             android:id="@+id/homegoalbutton"
             android:layout_above="@+id/button3"
@@ -75,7 +90,7 @@
 
         <Button
             android:layout_width="155dp"
-            android:layout_height="220dp"
+            android:layout_height="180dp"
             android:text="@string/away_goal"
             android:id="@+id/awaygoalbutton"
             android:layout_toEndOf="@+id/faceoffbutton"
@@ -96,9 +111,9 @@
             android:layout_height="wrap_content"
             android:text="@string/stop_song"
             android:id="@+id/stopbutton"
-            android:layout_marginTop="360dp"
+            android:layout_marginTop="345dp"
             android:onClick="stopGoalSongOnClick"
-            android:layout_marginLeft="220dp" />
+            android:layout_marginLeft="250dp" />
 
         <Button
             android:layout_width="wrap_content"
@@ -106,8 +121,27 @@
             android:text="@string/mute_song"
             android:id="@+id/mutebutton"
             android:layout_marginTop="-50dp"
-            android:layout_marginLeft="50dp"
+            android:layout_marginLeft="170dp"
             android:onClick="muteGoalSongOnClick" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/operate_timer"
+            android:id="@+id/operate_timer"
+            android:layout_marginTop="-50dp"
+            android:onClick="timerStartStopOnClick" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reset"
+            android:id="@+id/reset_button"
+            android:layout_marginTop="40dp"
+            android:layout_marginLeft="180dp"
+            style="?android:attr/buttonStyleSmall"
+            android:onClick="resetButtonOnClick" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -120,8 +154,23 @@
             android:layout_height="wrap_content"
             android:text="@string/faceoff_song"
             android:id="@+id/faceoffbutton"
-            android:layout_marginTop="290dp"
+            android:layout_marginTop="280dp"
             android:layout_marginLeft="90dp"
             android:onClick="faceoffSongButtonOnClick" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Status"
+            android:id="@+id/statusTextView"
+            android:layout_marginTop="240dp"
+            android:layout_marginLeft="50dp" />
     </LinearLayout>
 </RelativeLayout>
