@@ -12,14 +12,31 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+class EndResults {
+    public String homeTeamName;
+    public String awayTeamName;
+    public Integer homeTeamScore;
+    public Integer awayTeamScore;
+    public boolean isWinnerHomeTeam;
+    public boolean isGameEndedInTie = Boolean.FALSE;
+    public boolean isWonInOvertime = Boolean.FALSE;
+    public long regulationLengthSeconds = 300;
+}
 
 public class GoalSongActivity extends Activity {
+
+    public Integer TIMER_RESOLUTION = 1000;
+    public Integer LAST_MINUTE_IN_SECONDS = 60;
+    public Integer AMOUNT_OF_CSV_SCORETABLE_COLUMNS = 8;
 
     private MediaPlayer mediaPlayer;
 
@@ -27,7 +44,12 @@ public class GoalSongActivity extends Activity {
     private Boolean isAwayGoalSongPlaying;
     private Boolean isfaceOffSongPlaying;
     private Boolean isGoalSongMuted;
+    private Boolean isGoalSongDirExist;
+    private Boolean isLastMinuteAnnounced;
+    private Boolean isLastMinuteAnnouncementPresent;
 
+    private String scoreTableFileName = "scoreboard.csv";
+    private String lastMinuteAnnouncementFileName;
     private String homeTeamGoalSongFileName;
     private String awayTeamGoalSongFileName;
 
@@ -43,12 +65,15 @@ public class GoalSongActivity extends Activity {
     private TextView homeTeamScoreTextView;
     private TextView awayTeamScoreTextView;
 
-
+    private String absolutePathToScoreDataDirectory;
+    private String absolutePathToLastMinuteAnnouncementDirectory;
     private String absolutePathToGoalSongsDirectory;
     private String absolutePathToFaceoffSongsDirectory;
 
     private final String goalSongsFolderName = "goalsongs";
     private final String faceoffSongsFolderName = "faceoffsongs";
+    private final String appSoundsFolderName = "appsounds";
+    private final String scoresDatabaseFolderName = "scoretable";
 
     private List<String> faceOffSongsFileList;
 
@@ -57,12 +82,10 @@ public class GoalSongActivity extends Activity {
     private Boolean regulationTimeHasEnded;
     private Boolean countDownTimerIsRunning;
     private Boolean isTimerEnabledByUser;
-    private long userSettingForGamePeriod;
-
+    private long userSettingForGamePeriod = 300 * TIMER_RESOLUTION;
     public TextView statusTextView;
     public long timeLeftInTimerMillis;
     public CountDownTimer countDownTimer;
-    public Integer TIMER_RESOLUTION = 1000;
 
 
     private void getSettings(){
@@ -81,7 +104,11 @@ public class GoalSongActivity extends Activity {
 
         //isTimerEnabledByUser = sharedPref.getBoolean(SettingsActivity.TIMER_ENABLED_KEY_NAME, "");
 
-        userSettingForGamePeriod = (Integer.parseInt(sharedPref.getString(SettingsActivity.GAME_LENGTH_KEY_NAME, "")) * SettingsActivity.USER_SETTING_BASIC_UNIT_IN_SECONDS * TIMER_RESOLUTION) ;
+        userSettingForGamePeriod = (Integer.parseInt(sharedPref.getString(SettingsActivity.GAME_LENGTH_KEY_NAME, "")) * SettingsActivity.USER_SETTING_BASIC_UNIT_IN_SECONDS * TIMER_RESOLUTION);
+
+        timeLeftInTimerMillis = userSettingForGamePeriod;
+
+        statusTextView.setText(Long.toString( timeLeftInTimerMillis / TIMER_RESOLUTION /60) + ":00.000000");
     }
 
     @Override
@@ -106,6 +133,51 @@ public class GoalSongActivity extends Activity {
 
         absolutePathToFaceoffSongsDirectory = String.valueOf(getExternalFilesDir(null)) + "/" + faceoffSongsFolderName;
 
+        absolutePathToLastMinuteAnnouncementDirectory = String.valueOf(getExternalFilesDir(null)) + "/" + appSoundsFolderName;
+
+        absolutePathToScoreDataDirectory = String.valueOf(getExternalFilesDir(null)) + "/" + scoresDatabaseFolderName;
+
+        //Check if folders exist, create if needed!
+        File goalSongsDir = new File(absolutePathToGoalSongsDirectory);
+        File faceOffSongsDir = new File(absolutePathToFaceoffSongsDirectory);
+        File lastMinAnnouncementDir = new File(absolutePathToLastMinuteAnnouncementDirectory);
+        File scoreTableDir = new File(absolutePathToScoreDataDirectory);
+
+
+        if(!goalSongsDir.exists()) {
+            if(!goalSongsDir.mkdir()) {
+                System.out.print("Warning! Could not create goal songs directory!");
+            }
+        }
+        if(!faceOffSongsDir.exists()) {
+            if(!faceOffSongsDir.mkdir()) {
+                System.out.print("Warning! Could not create face off songs directory!");
+            }
+        }
+        if(!lastMinAnnouncementDir.exists()) {
+            if(!lastMinAnnouncementDir.mkdir()) {
+                System.out.print("Warning! Could not create last minute announcement directory!");
+            }
+        }
+        if(!scoreTableDir.exists()) {
+            if(!scoreTableDir.mkdir()) {
+                System.out.print("Warning! Could not create the score tables directory!");
+            }
+        }
+
+        //Try to also create the score table file
+        File scoreTableFile = new File(absolutePathToScoreDataDirectory, scoreTableFileName);
+
+        if(!scoreTableFile.exists()) {
+            try {
+                if (!scoreTableFile.createNewFile()) {
+                    System.out.print("Warning! Could not create the score tables file!");
+                }
+            } catch (Exception e) {
+                System.out.print("Warning! Could not create the score tables file!");
+            }
+        }
+
         //Init face-off songs list
         faceOffSongsFileList = new ArrayList<String>();
 
@@ -124,8 +196,6 @@ public class GoalSongActivity extends Activity {
         //Timer:
         isTimerEnabledByUser = Boolean.TRUE;
 
-        userSettingForGamePeriod = 300 * TIMER_RESOLUTION;
-
         timeLeftInTimerMillis = userSettingForGamePeriod;
 
         statusTextView.setText(Long.toString( timeLeftInTimerMillis / TIMER_RESOLUTION /60) + ":00.000000");
@@ -139,21 +209,60 @@ public class GoalSongActivity extends Activity {
         awayTeamScoreTextView.setText(Integer.toString(awayTeamScore));
 
         prepareFaceOffSongs();
+
+        prepareLastMinuteAnnouncement();
+
+        isLastMinuteAnnounced = Boolean.FALSE;
+    }
+
+    private void prepareLastMinuteAnnouncement(){
+
+        isLastMinuteAnnouncementPresent = Boolean.FALSE;
+
+        try {
+            //Get list of face-off songs
+            File f = new File(absolutePathToLastMinuteAnnouncementDirectory);
+            File file_listing[] = f.listFiles();
+
+            //Just take the first valid file there is
+            for(int i = 0; i < file_listing.length; i++) {
+                if (file_listing[i].isFile()) {
+                    lastMinuteAnnouncementFileName = file_listing[i].getName();
+                    isLastMinuteAnnouncementPresent = Boolean.TRUE;
+                    break;
+                }
+            }
+
+        } catch(Exception e) {
+            e.toString();
+            statusTextView.setText("No Goal song directory exists! Please create one under:");
+
+            isLastMinuteAnnouncementPresent = Boolean.FALSE;
+        }
     }
 
     private void prepareFaceOffSongs(){
 
-        //Get list of face-off songs
-        File f = new File(absolutePathToFaceoffSongsDirectory);
-        File file_listing[] = f.listFiles();
+        try {
+            //Get list of face-off songs
+            File f = new File(absolutePathToFaceoffSongsDirectory);
+            File file_listing[] = f.listFiles();
 
-        //Always clear whatever entries there were before
-        faceOffSongsFileList.clear();
+            //Always clear whatever entries there were before
+            faceOffSongsFileList.clear();
 
-        for(int x = 0 ; x < file_listing.length; x++) {
-            if(file_listing[x].isFile()) {
-                faceOffSongsFileList.add(file_listing[x].getName());
+            for (int x = 0; x < file_listing.length; x++) {
+                if (file_listing[x].isFile()) {
+                    faceOffSongsFileList.add(file_listing[x].getName());
+                }
             }
+
+            isGoalSongDirExist = Boolean.TRUE;
+
+        } catch(Exception e) {
+            e.toString();
+            statusTextView.setText("No Goal song directory exists! Please create one under:");
+            isGoalSongDirExist = Boolean.FALSE;
         }
     }
 
@@ -223,8 +332,22 @@ public class GoalSongActivity extends Activity {
         homeTeamScoreTextView.setText(Integer.toString(homeTeamScore));
 
         if(regulationTimeHasEnded == Boolean.TRUE){
-            regulationTimeHasEnded = Boolean.FALSE;
+            regulationTimeHasEnded = Boolean.FALSE;//Reset flag
             statusTextView.setText(homeTeamName + " WINS!");
+
+            EndResults result = new EndResults();
+
+            result.isWonInOvertime = Boolean.TRUE;
+            result.regulationLengthSeconds = userSettingForGamePeriod;
+            result.homeTeamScore = homeTeamScore;
+            result.awayTeamScore = awayTeamScore;
+            result.homeTeamName = homeTeamName;
+            result.awayTeamName = awayTeamName;
+            result.isWinnerHomeTeam = Boolean.TRUE;
+
+            registerGameEndScore(result);
+
+            isLastMinuteAnnounced = Boolean.FALSE;
         }
 
         if (isAwayGoalSongPlaying == Boolean.TRUE || isHomeGoalSongPlaying == Boolean.TRUE) {
@@ -257,8 +380,22 @@ public class GoalSongActivity extends Activity {
         awayTeamScoreTextView.setText(Integer.toString(awayTeamScore));
 
         if(regulationTimeHasEnded == Boolean.TRUE){
-            regulationTimeHasEnded = Boolean.FALSE;
+            regulationTimeHasEnded = Boolean.FALSE;//Reset flag
             statusTextView.setText(awayTeamName + " WINS!");
+
+            EndResults result = new EndResults();
+
+            result.isWonInOvertime = Boolean.TRUE;
+            result.regulationLengthSeconds = userSettingForGamePeriod;
+            result.homeTeamScore = homeTeamScore;
+            result.awayTeamScore = awayTeamScore;
+            result.homeTeamName = homeTeamName;
+            result.awayTeamName = awayTeamName;
+            result.isWinnerHomeTeam = Boolean.FALSE;
+
+            registerGameEndScore(result);
+
+            isLastMinuteAnnounced = Boolean.FALSE;
         }
 
         if (isAwayGoalSongPlaying == Boolean.TRUE || isHomeGoalSongPlaying == Boolean.TRUE) {
@@ -354,6 +491,77 @@ public class GoalSongActivity extends Activity {
         }
     }
 
+    public void registerGameEndScore(EndResults results) {
+
+        //CSV header:
+        //
+        //winning team;losing team;winning score;losing score;winner points;loser points;game length minutes;home team name
+        String winningTeam;
+        String losingTeam;
+        String winningScore;
+        String losingScore;
+        String winnerPoints;
+        String loserPoints;
+        String gameLength;
+        String homeTeamName;
+
+        if(results.isWinnerHomeTeam == Boolean.TRUE) {
+            winningTeam = results.homeTeamName;
+            losingTeam = results.awayTeamName;
+            winningScore = results.homeTeamScore.toString();
+            losingScore = results.awayTeamScore.toString();
+        } else { //else winner is away team
+            winningTeam = results.awayTeamName;
+            losingTeam = results.homeTeamName;
+            winningScore = results.awayTeamScore.toString();
+            losingScore = results.homeTeamScore.toString();
+        }
+
+        if(results.isWonInOvertime == Boolean.TRUE) {
+            winnerPoints = "2";
+            loserPoints = "1";
+        } else {
+            winnerPoints = "3";
+            loserPoints = "0";
+        }
+
+        gameLength = Long.toString((results.regulationLengthSeconds / 60000));
+        homeTeamName = results.homeTeamName;
+
+        File scoreTableFile = new File(absolutePathToScoreDataDirectory, scoreTableFileName);
+
+        //Check first for file existance
+        if(scoreTableFile.exists()) {
+            try {
+                FileWriter scoreTableWriter = new FileWriter(scoreTableFile.getAbsoluteFile(), true);
+                BufferedWriter scoreTableBufferedWriter = new BufferedWriter(scoreTableWriter);
+
+                scoreTableBufferedWriter.append(winningTeam);
+                scoreTableBufferedWriter.append(",");
+                scoreTableBufferedWriter.append(losingTeam);
+                scoreTableBufferedWriter.append(",");
+                scoreTableBufferedWriter.append(winningScore);
+                scoreTableBufferedWriter.append(",");
+                scoreTableBufferedWriter.append(losingScore);
+                scoreTableBufferedWriter.append(",");
+                scoreTableBufferedWriter.append(winnerPoints);
+                scoreTableBufferedWriter.append(",");
+                scoreTableBufferedWriter.append(loserPoints);
+                scoreTableBufferedWriter.append(",");
+                scoreTableBufferedWriter.append(gameLength);
+                scoreTableBufferedWriter.append(",");
+                scoreTableBufferedWriter.append(homeTeamName);
+
+                scoreTableBufferedWriter.newLine();
+
+                scoreTableBufferedWriter.close();
+            } catch (Exception e) {
+
+            }
+        }
+
+    }
+
 
     public void settingsOnClick(View v) {
 
@@ -362,21 +570,30 @@ public class GoalSongActivity extends Activity {
 
         Intent intent = new Intent(this, SettingsActivity.class);
 
-        File f = new File(absolutePathToGoalSongsDirectory);
-        File file_listing[] = f.listFiles();
+        try {
+            File f = new File(absolutePathToGoalSongsDirectory);
+            File file_listing[] = f.listFiles();
 
-        List<String> file_list_string = new ArrayList<String>();
+            List<String> file_list_string = new ArrayList<String>();
 
-        for(int x = 0 ; x < file_listing.length; x++) {
-            if(file_listing[x].isFile()) {
-                file_list_string.add(file_listing[x].getName());
+            for (int x = 0; x < file_listing.length; x++) {
+                if (file_listing[x].isFile()) {
+                    file_list_string.add(file_listing[x].getName());
+                }
             }
+
+            isGoalSongDirExist = Boolean.TRUE;
+
+            //Attach the list files found in the goal songs directory, for user to choose in the settings Activity/screen
+            intent.putStringArrayListExtra("file_list_string", (ArrayList<String>) file_list_string);
+
+            startActivity(intent);
+        } catch(Exception e) {
+            e.toString();
+
+            isGoalSongDirExist = Boolean.FALSE;
         }
 
-        //Attach the list files found in the goal songs directory, for user to choose in the settings Activity/screen
-        intent.putStringArrayListExtra("file_list_string", (ArrayList<String>) file_list_string);
-
-        startActivity(intent);
     }
 
     public void gameRegulationTimeHasEndedCB(){
@@ -386,17 +603,37 @@ public class GoalSongActivity extends Activity {
             statusTextView.setText("OVERTIME");
         }
         else {
+            EndResults result = new EndResults();
+
             if(homeTeamScore > awayTeamScore){
                 statusTextView.setText(homeTeamName + " WINS!");
                 prepareAndStartPlayingSong(absolutePathToGoalSongsDirectory + "/" + homeTeamGoalSongFileName);
+
+                result.isWinnerHomeTeam = Boolean.TRUE;
             }
             else if(awayTeamScore > homeTeamScore){
                 statusTextView.setText(awayTeamName + " WINS!");
                 prepareAndStartPlayingSong(absolutePathToGoalSongsDirectory + "/" + awayTeamGoalSongFileName);
+
+                result.isWinnerHomeTeam = Boolean.FALSE;
             }
             else{
+                /* This should never happen, since we always have overtime! */
                 statusTextView.setText("A tie game!");
+
+                result.isGameEndedInTie = Boolean.TRUE;
             }
+
+            result.isWonInOvertime = Boolean.FALSE;
+            result.regulationLengthSeconds = userSettingForGamePeriod;
+            result.homeTeamScore = homeTeamScore;
+            result.awayTeamScore = awayTeamScore;
+            result.homeTeamName = homeTeamName;
+            result.awayTeamName = awayTeamName;
+
+            registerGameEndScore(result);
+
+            isLastMinuteAnnounced = Boolean.FALSE;
         }
     }
 
@@ -421,6 +658,10 @@ public class GoalSongActivity extends Activity {
 
         //Reset text field for timer
         statusTextView.setText(Long.toString( timeLeftInTimerMillis / TIMER_RESOLUTION /60) + ":00.000000");
+
+        isLastMinuteAnnounced = Boolean.FALSE;
+
+        regulationTimeHasEnded = Boolean.FALSE;
     }
 
     public void startRegulationTimer(){
@@ -429,16 +670,29 @@ public class GoalSongActivity extends Activity {
 
             if (!countDownTimerIsRunning) {
                 countDownTimerIsRunning = Boolean.TRUE;
+
                 //Create timer updating each 10 milliseconds
                 countDownTimer = new CountDownTimer(timeLeftInTimerMillis, 10) {
 
                     public void onTick(long millisUntilFinished) {
+
                         timeLeftInTimerMillis = millisUntilFinished;
                         Long minsLeft = ((timeLeftInTimerMillis / TIMER_RESOLUTION) / 60);
+                        //Set text on screen every time this CB is called
                         statusTextView.setText( Long.toString( minsLeft )
                                                 + ":"
                                                 + Float.toString( ((float) timeLeftInTimerMillis / TIMER_RESOLUTION) - (float) (minsLeft * 60) )
                                                 );
+
+                        if( (isLastMinuteAnnouncementPresent == Boolean.TRUE) &&
+                            (isLastMinuteAnnounced == Boolean.FALSE)          &&
+                            ((timeLeftInTimerMillis / TIMER_RESOLUTION) <= LAST_MINUTE_IN_SECONDS))
+                        {
+
+                            prepareAndStartPlayingSong(absolutePathToLastMinuteAnnouncementDirectory + "/" + lastMinuteAnnouncementFileName);
+
+                            isLastMinuteAnnounced = Boolean.TRUE;
+                        }
                     }
 
                     public void onFinish() {
