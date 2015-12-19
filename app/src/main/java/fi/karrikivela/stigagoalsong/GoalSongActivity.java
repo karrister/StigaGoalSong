@@ -183,6 +183,9 @@ public class GoalSongActivity extends Activity {
                 if (!scoreTableFile.createNewFile()) {
                     System.out.print("Warning! Could not create the score tables file!");
                 }
+
+                writeScoreTableLine(scoreTableFile);
+
             } catch (Exception e) {
                 System.out.print("Warning! Could not create the score tables file!");
             }
@@ -514,6 +517,72 @@ public class GoalSongActivity extends Activity {
         }
     }
 
+    public void writeScoreTableLine(File scoreTableFile) {
+        try {
+            FileWriter scoreTableWriter = new FileWriter(scoreTableFile.getAbsoluteFile(), true);
+            BufferedWriter scoreTableBufferedWriter = new BufferedWriter(scoreTableWriter);
+
+            scoreTableBufferedWriter.append("WINNER");
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append("LOSER");
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append("WINNER GOALS");
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append("LOSER GOALS");
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append("WINNER POINTS");
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append("LOSER POINTS");
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append("GAME LENGTH MINUTES");
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append("HOME TEAM NAME");
+
+            scoreTableBufferedWriter.newLine();
+
+            scoreTableBufferedWriter.close();
+        } catch (Exception e) {
+
+        }
+    }
+
+    public void writeScoreTableLine(File scoreTableFile,
+                                    String winningTeam,
+                                    String losingTeam,
+                                    String winningScore,
+                                    String losingScore,
+                                    String winnerPoints,
+                                    String loserPoints,
+                                    String gameLength) {
+
+        try {
+            FileWriter scoreTableWriter = new FileWriter(scoreTableFile.getAbsoluteFile(), true);
+            BufferedWriter scoreTableBufferedWriter = new BufferedWriter(scoreTableWriter);
+
+            scoreTableBufferedWriter.append(winningTeam);
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append(losingTeam);
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append(winningScore);
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append(losingScore);
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append(winnerPoints);
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append(loserPoints);
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append(gameLength);
+            scoreTableBufferedWriter.append(",");
+            scoreTableBufferedWriter.append(homeTeamName);
+
+            scoreTableBufferedWriter.newLine();
+
+            scoreTableBufferedWriter.close();
+        } catch (Exception e) {
+
+        }
+    }
+
     public void registerGameEndScore(EndResults results) {
 
         /* This function seems to be always called when game ends (sensing some sarcasm
@@ -557,34 +626,9 @@ public class GoalSongActivity extends Activity {
 
         File scoreTableFile = new File(absolutePathToScoreDataDirectory, scoreTableFileName);
 
-        //Check first for file existance
+        //Sanity check for file existence
         if(scoreTableFile.exists()) {
-            try {
-                FileWriter scoreTableWriter = new FileWriter(scoreTableFile.getAbsoluteFile(), true);
-                BufferedWriter scoreTableBufferedWriter = new BufferedWriter(scoreTableWriter);
-
-                scoreTableBufferedWriter.append(winningTeam);
-                scoreTableBufferedWriter.append(",");
-                scoreTableBufferedWriter.append(losingTeam);
-                scoreTableBufferedWriter.append(",");
-                scoreTableBufferedWriter.append(winningScore);
-                scoreTableBufferedWriter.append(",");
-                scoreTableBufferedWriter.append(losingScore);
-                scoreTableBufferedWriter.append(",");
-                scoreTableBufferedWriter.append(winnerPoints);
-                scoreTableBufferedWriter.append(",");
-                scoreTableBufferedWriter.append(loserPoints);
-                scoreTableBufferedWriter.append(",");
-                scoreTableBufferedWriter.append(gameLength);
-                scoreTableBufferedWriter.append(",");
-                scoreTableBufferedWriter.append(homeTeamName);
-
-                scoreTableBufferedWriter.newLine();
-
-                scoreTableBufferedWriter.close();
-            } catch (Exception e) {
-
-            }
+            writeScoreTableLine(scoreTableFile, winningTeam, losingTeam, winningScore, losingScore, winnerPoints, loserPoints, gameLength);
         }
 
     }
