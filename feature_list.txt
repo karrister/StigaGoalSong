@@ -3,3 +3,8 @@ EDIT SCORE
 
 REWRITE
 -The project started as a quick 2 hour project for making a very simple app for table hockey goal songs. The language used could be called, to my embarrassment, "C like Java". Need to write from the start and use objects and their attributs correctly, not global variables!
+
+SCORE TABLE
+-Edit csv name
+-Show tournament info as parsed
+-Add saving of date & time

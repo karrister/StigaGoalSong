@@ -47,6 +47,7 @@ public class GoalSongActivity extends Activity {
     private Boolean isGoalSongDirExist;
     private Boolean isLastMinuteAnnounced;
     private Boolean isLastMinuteAnnouncementPresent;
+    private Boolean isGameOnGoing = Boolean.FALSE;
 
     private String scoreTableFileName = "scoreboard.csv";
     private String lastMinuteAnnouncementFileName;
@@ -83,6 +84,7 @@ public class GoalSongActivity extends Activity {
     private Boolean countDownTimerIsRunning;
     private Boolean isTimerEnabledByUser;
     private long userSettingForGamePeriod = 300 * TIMER_RESOLUTION;
+    private long currentUserSettingForGamePeriod = userSettingForGamePeriod; //Used for writing down the results
     public TextView statusTextView;
     public long timeLeftInTimerMillis;
     public CountDownTimer countDownTimer;
@@ -102,13 +104,21 @@ public class GoalSongActivity extends Activity {
         homeTeamGoalSongFileName = sharedPref.getString(SettingsActivity.HOME_GOAL_SONG_KEY_NAME, "");
         awayTeamGoalSongFileName = sharedPref.getString(SettingsActivity.AWAY_GOAL_SONG_KEY_NAME, "");
 
+        //Not supported currently as didn't work
         //isTimerEnabledByUser = sharedPref.getBoolean(SettingsActivity.TIMER_ENABLED_KEY_NAME, "");
 
         userSettingForGamePeriod = (Integer.parseInt(sharedPref.getString(SettingsActivity.GAME_LENGTH_KEY_NAME, "")) * SettingsActivity.USER_SETTING_BASIC_UNIT_IN_SECONDS * TIMER_RESOLUTION);
 
-        timeLeftInTimerMillis = userSettingForGamePeriod;
+        if(isGameOnGoing == Boolean.FALSE) {
+            timeLeftInTimerMillis = userSettingForGamePeriod;
+        }
 
-        statusTextView.setText(Long.toString( timeLeftInTimerMillis / TIMER_RESOLUTION /60) + ":00.000000");
+        Long minsLeft = ((timeLeftInTimerMillis / TIMER_RESOLUTION) / 60);
+        //Set text on screen every time this CB is called
+        statusTextView.setText( Long.toString( minsLeft )
+                                + ":"
+                                + Float.toString( ((float) timeLeftInTimerMillis / TIMER_RESOLUTION) - (float) (minsLeft * 60) )
+                                );
     }
 
     @Override
@@ -198,7 +208,12 @@ public class GoalSongActivity extends Activity {
 
         timeLeftInTimerMillis = userSettingForGamePeriod;
 
-        statusTextView.setText(Long.toString( timeLeftInTimerMillis / TIMER_RESOLUTION /60) + ":00.000000");
+        Long minsLeft = ((timeLeftInTimerMillis / TIMER_RESOLUTION) / 60);
+        //Set text on screen every time this CB is called
+        statusTextView.setText( Long.toString( minsLeft )
+                                + ":"
+                                + Float.toString( ((float) timeLeftInTimerMillis / TIMER_RESOLUTION) - (float) (minsLeft * 60) )
+                                );
 
         regulationTimeHasEnded = Boolean.FALSE;
         countDownTimerIsRunning = Boolean.FALSE;
@@ -338,7 +353,7 @@ public class GoalSongActivity extends Activity {
             EndResults result = new EndResults();
 
             result.isWonInOvertime = Boolean.TRUE;
-            result.regulationLengthSeconds = userSettingForGamePeriod;
+            result.regulationLengthSeconds = currentUserSettingForGamePeriod / TIMER_RESOLUTION / 60;
             result.homeTeamScore = homeTeamScore;
             result.awayTeamScore = awayTeamScore;
             result.homeTeamName = homeTeamName;
@@ -386,7 +401,7 @@ public class GoalSongActivity extends Activity {
             EndResults result = new EndResults();
 
             result.isWonInOvertime = Boolean.TRUE;
-            result.regulationLengthSeconds = userSettingForGamePeriod;
+            result.regulationLengthSeconds = currentUserSettingForGamePeriod / TIMER_RESOLUTION / 60;
             result.homeTeamScore = homeTeamScore;
             result.awayTeamScore = awayTeamScore;
             result.homeTeamName = homeTeamName;
@@ -414,6 +429,14 @@ public class GoalSongActivity extends Activity {
     *  Summary: This method is called whenever the faceoff button is being clicked
     * */
     public void faceoffSongButtonOnClick(View v){
+
+        if(isGameOnGoing == Boolean.FALSE) {
+            //Set for correct saving of period length at the end of the game
+            currentUserSettingForGamePeriod = userSettingForGamePeriod;
+            //Set status that game has started
+            isGameOnGoing = Boolean.TRUE;
+        }
+
         //On first click start playing face-off song
         if(!isfaceOffSongPlaying){
 
@@ -493,6 +516,10 @@ public class GoalSongActivity extends Activity {
 
     public void registerGameEndScore(EndResults results) {
 
+        /* This function seems to be always called when game ends (sensing some sarcasm
+         * towards my OWN code!!), thus it is a good place to set game end status */
+        isGameOnGoing = Boolean.FALSE;
+
         //CSV header:
         //
         //winning team;losing team;winning score;losing score;winner points;loser points;game length minutes;home team name
@@ -525,7 +552,7 @@ public class GoalSongActivity extends Activity {
             loserPoints = "0";
         }
 
-        gameLength = Long.toString((results.regulationLengthSeconds / 60000));
+        gameLength = Long.toString(results.regulationLengthSeconds);
         homeTeamName = results.homeTeamName;
 
         File scoreTableFile = new File(absolutePathToScoreDataDirectory, scoreTableFileName);
@@ -618,14 +645,14 @@ public class GoalSongActivity extends Activity {
                 result.isWinnerHomeTeam = Boolean.FALSE;
             }
             else{
-                /* This should never happen, since we always have overtime! */
+                /* This should never happen, since we always have overtime in case of a tie game. */
                 statusTextView.setText("A tie game!");
 
                 result.isGameEndedInTie = Boolean.TRUE;
             }
 
             result.isWonInOvertime = Boolean.FALSE;
-            result.regulationLengthSeconds = userSettingForGamePeriod;
+            result.regulationLengthSeconds = currentUserSettingForGamePeriod / TIMER_RESOLUTION / 60;
             result.homeTeamScore = homeTeamScore;
             result.awayTeamScore = awayTeamScore;
             result.homeTeamName = homeTeamName;
@@ -638,6 +665,9 @@ public class GoalSongActivity extends Activity {
     }
 
     public void resetButtonOnClick(View v) {
+
+        //Set game status to not be ongoing
+        isGameOnGoing = Boolean.FALSE;
 
         //Stop timer
         stopRegulationTimer();
@@ -657,7 +687,12 @@ public class GoalSongActivity extends Activity {
         timeLeftInTimerMillis = userSettingForGamePeriod;
 
         //Reset text field for timer
-        statusTextView.setText(Long.toString( timeLeftInTimerMillis / TIMER_RESOLUTION /60) + ":00.000000");
+        Long minsLeft = ((timeLeftInTimerMillis / TIMER_RESOLUTION) / 60);
+        //Set text on screen every time this CB is called
+        statusTextView.setText( Long.toString( minsLeft )
+                                + ":"
+                                + Float.toString( ((float) timeLeftInTimerMillis / TIMER_RESOLUTION) - (float) (minsLeft * 60) )
+                                );
 
         isLastMinuteAnnounced = Boolean.FALSE;
 
@@ -717,11 +752,19 @@ public class GoalSongActivity extends Activity {
     }
 
     public void timerStartStopOnClick(View v) {
-            if (countDownTimerIsRunning) {
-                stopRegulationTimer();
-            } else {
-                startRegulationTimer();
-            }
+
+        if(isGameOnGoing == Boolean.FALSE) {
+            //Set for correct saving of period length at the end of the game
+            currentUserSettingForGamePeriod = userSettingForGamePeriod;
+            //Set status that game has started
+            isGameOnGoing = Boolean.TRUE;
+        }
+
+        if (countDownTimerIsRunning) {
+            stopRegulationTimer();
+        } else {
+            startRegulationTimer();
+        }
     }
 
 
