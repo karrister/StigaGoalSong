@@ -1,14 +1,11 @@
 MISC
--Need to protect some flows. What will for instance if pressing a goal button while timer is not running? Or when game didn't even start yet!
+-Need to protect some flows. What will happen for instance if pressing a goal button while timer is not running? Or when game didn't even start yet!
 
 GOALSONGS
 -If starting game by a timer, and the game has freshly been started, the first goal doesnt get their goalsong played
 
 SCOREBOARD
 -App doesnt know to make the header line to CSV, if the file is created by app (user needs to pre-create the file with the header line)
-
-RESET
--If changing between portrait and landscape during app running, it will effectively reset it's state (need to block landscape mode)
 
 GAME END
 -If start time was used during a game (instead of face off button), the winner's song does not seize to play from just pressing the reset button. Might be experienced only in the first game.
