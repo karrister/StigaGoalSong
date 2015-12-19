@@ -1,0 +1,5 @@
+EDIT SCORE
+-Mistakenly gave someone a score? Hook for changing score and time freely
+
+REWRITE
+-The project started as a quick 2 hour project for making a very simple app for table hockey goal songs. The language used could be called, to my embarrassment, "C like Java". Need to write from the start and use objects and their attributs correctly, not global variables!

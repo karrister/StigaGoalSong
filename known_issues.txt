@@ -1,0 +1,6 @@
+TIMER RESETS IF USER PUTS APPLICATION TO BACKGROUND AND COMES BACK
+-If going to another application and coming back, the timer is reset. This doesnt seem to happen if the timer is running when set to background.
+-Looks like an issue with getting the configurations from setup every time
+
+MISC
+-Need to protect some flows. What will for instance if pressing a goal button while timer is not running? Or when game didn't even start yet!
